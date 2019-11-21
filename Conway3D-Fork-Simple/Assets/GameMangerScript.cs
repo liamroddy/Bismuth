@@ -254,21 +254,21 @@ public class GameMangerScript : MonoBehaviour
 		// Zoom in and out
         if (Input.GetKey("up") && Vector3.Distance(Vector3.zero, Camera.main.transform.position) > 2) // don't allow to zoom to far in, toherwise can't zoom back out
         {
-            Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, 1);
+            Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, 50f * Time.deltaTime);
         }
         if (Input.GetKey("down"))
         {
-            Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, -1);
+            Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, -50f * Time.deltaTime);
         }
 
         // Rotate camera around on x plane (left to right)
         if (Input.GetKey(KeyCode.A))
         {
-            Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, 1);
+            Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, 50f * Time.deltaTime);
         }
         if (Input.GetKey(KeyCode.D))
         {
-            Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, -1);
+            Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, -50f * Time.deltaTime);
         }
 
 		// Rotate camera around on y plane (top to bottom)
