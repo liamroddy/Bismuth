@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\GameMangerScript.cs" />
+     <Compile Include="Assets\UIManagerScript.cs" />
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>C:/Users/Liam/Documents/GitHub/Bismuth/Conway3D-Fork-Simple/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
  </Reference>

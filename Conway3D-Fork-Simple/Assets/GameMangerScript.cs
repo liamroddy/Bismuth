@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameMangerScript : MonoBehaviour
 {
@@ -15,6 +16,12 @@ public class GameMangerScript : MonoBehaviour
 	private Vector3 worldCentre;
 	private GameObject[, ,] cubeArray;
 
+	int starvationValue;
+	int overpopulationValue;
+	int generationLowerValue;
+	int generationUpperValue;
+	
+
 	// Start is called before the first frame update
     void Start()
     {
@@ -25,7 +32,7 @@ public class GameMangerScript : MonoBehaviour
 
 		cubeLen = 2;
 		
-		SetupGame(20, 20, 20);
+		SetupGame(5, 5, 5);
 		RandomiseState();
 
 		// draw lines to show the outside of our matrix
@@ -85,9 +92,9 @@ public class GameMangerScript : MonoBehaviour
 						int cnt = countNeighbours(x,y,z);
 
 						// apply life/death rules on NEXT LAYER
-						if (cnt < 4 || cnt > 9) // starvation/ overpopulation --- < 6.5 ||  9.75
+						if (cnt < starvationValue || cnt > overpopulationValue) // starvation/ overpopulation --- < 6.5 ||  9.75
 							state[x,y,z,1] = false;
-						if (cnt > 6 && cnt < 9) // > 6.5 && < 9.75
+						if (cnt > generationLowerValue && cnt < generationUpperValue) // > 6.5 && < 9.75
 							state[x,y,z,1] = true; // IT'S ALIIIVVVEEEE!!!!
 
 						if (cubeArray[x,y,z] != null) // if there's a cube here from last run
@@ -297,4 +304,43 @@ public class GameMangerScript : MonoBehaviour
         }
 
     }
+
+	public void restartGame(int x, int y, int z, int starve, int overpop, int genLower, int genUpper){
+		int vert, hor, zert;
+		//vert = hor = zert = 5;
+
+		vert = y;
+		hor = x;
+		zert = z;
+
+		starvationValue = starve;
+		overpopulationValue = overpop;
+		generationLowerValue = genLower;
+		generationUpperValue = genUpper;
+		
+		// if TryParse kicks up a fuss over any of the user's dimension inputs
+		/*if (!(int.TryParse(x, out vert) && int.TryParse(y, out hor) && int.TryParse(z, out zert)))
+			vert = -1; // atomatically fail the next if statement
+*/
+/*
+		int vert = int.Parse(verticalField.text);
+		int hor = int.Parse(horizontalField.text);
+		int zert = int.Parse(zertizontalField.text);*/
+		
+		// if none of our three dimension fields are blank
+		if(vert>0 && hor>0 && zert>0) {
+			gridDepth=zert;
+			gridHeight = vert;
+			gridWidth = hor;
+			
+			// set up and start
+			Debug.Log ("Dimensions valid!! " + hor + "x" + vert + "x" + zert);
+			SetupGame(gridWidth, gridHeight, gridDepth);
+			RandomiseState();
+		}
+		else
+			Debug.Log ("Dimension input invalid!");
+
+		Debug.Log (	starvationValue + ", " + overpopulationValue +", " +  generationLowerValue +", " + 	generationUpperValue );
+	}
 }
