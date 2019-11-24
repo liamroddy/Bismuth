@@ -49,15 +49,6 @@ public class GameMangerScript : MonoBehaviour
 		worldCentre = new Vector3(-(gridWidth/2)*cubeLen, -(gridHeight/2)*cubeLen, -(gridDepth/2)*cubeLen);
 		state = new bool[gridWidth, gridHeight, gridDepth, 2];
 
-		// for (int x=0; x<cubeArray.GetLength(); x++) {
-		// 		for (int y=0; y<gridHeight; y++) {
-		// 			for (int z=0; z<gridDepth; z++) {
-		// 				if (cubeArray[x,y,z] != null) // if there's a cube here from last run
-		// 					Object.Destroy(cubeArray[x,y,z]);
-		// 				}
-		// 		}
-		// }
-
 		if (cubeArray != null)
 		{
 			foreach (GameObject cube in cubeArray)
@@ -71,7 +62,6 @@ public class GameMangerScript : MonoBehaviour
 		for (int x=0; x<gridWidth; x++) {
 			for (int y=0; y<gridHeight; y++) {
 				for (int z=0; z<gridDepth; z++) {	
-					//(Random.Range(0,1) == 1 ? State[x][y][z][0] = true : State[x][y][z][0] = false);
 					if (Random.Range(0,1f) <= 0.5)
 						state[x, y, z, 0] = true;
 					else
@@ -92,26 +82,27 @@ public class GameMangerScript : MonoBehaviour
 						int cnt = countNeighbours(x,y,z);
 
 						// apply life/death rules on NEXT LAYER
-						if (cnt < starvationValue || cnt > overpopulationValue) // starvation/ overpopulation --- < 6.5 ||  9.75
-							state[x,y,z,1] = false;
-						if (cnt > generationLowerValue && cnt < generationUpperValue) // > 6.5 && < 9.75
+						if (cnt < starvationValue || cnt > overpopulationValue) // if starvation/ overpopulation values met
+							state[x,y,z,1] = false; // kill the cell
+						if (cnt > generationLowerValue && cnt < generationUpperValue) // if the range of values for spontaneous gen met
 							state[x,y,z,1] = true; // IT'S ALIIIVVVEEEE!!!!
 
-						if (cubeArray[x,y,z] != null) // if there's a cube here from last run
-							Object.Destroy(cubeArray[x,y,z]);
-
-						// BAD CODE, BUT LETS JUST GIVE IT A CRACK ANYWAY
 						if (state[x,y,z,1]) {
-							//cube = (GameObject)Instantiate(cubeBase, new Vector3(0,0,0), Quaternion.identity);
-							cubeArray[x,y,z] = GameObject.CreatePrimitive(PrimitiveType.Cube);;
-							cube = cubeArray[x,y,z];
-							cube.transform.localScale = new Vector3(cubeLen, cubeLen, cubeLen);
-							cube.transform.position = new Vector3(worldCentre.x+(x*cubeLen), worldCentre.y+(y*cubeLen), worldCentre.z+(z*cubeLen));
-							
+							if (cubeArray[x,y,z] == null) {  // if there's not already a cube in place from last cycle
+								cubeArray[x,y,z] = GameObject.CreatePrimitive(PrimitiveType.Cube);;
+								cube = cubeArray[x,y,z];
+								cube.transform.localScale = new Vector3(cubeLen, cubeLen, cubeLen);
+								cube.transform.position = new Vector3(worldCentre.x+(x*cubeLen), worldCentre.y+(y*cubeLen), worldCentre.z+(z*cubeLen));
+								
 
-							float hue = ((float)y/(float)gridHeight); // entire rainbow should be run through from bottom floor to top
-							float val = (((float)x/(float)gridWidth)/2f + .5f); // smaller range for value, don't want a mass of hard-to-distinguish black cubes
-							cube.GetComponent<Renderer>().material.color = Color.HSVToRGB(hue, 1f, val);
+								float hue = ((float)y/(float)gridHeight); // entire rainbow should be run through from bottom floor to top
+								//float val = (((float)x/(float)gridWidth)/2f + .5f); // smaller range for value, don't want a mass of hard-to-distinguish black cubes
+								cube.GetComponent<Renderer>().material.color = Color.HSVToRGB(hue, 1f, 1f);
+							}
+						}
+						else { // if it's a dead cell this cycle
+							if (cubeArray[x,y,z] != null) // if there's a cube here from last run
+								Object.Destroy(cubeArray[x,y,z]);
 						}
 					}
 				}
@@ -125,7 +116,7 @@ public class GameMangerScript : MonoBehaviour
 					}
 				}
 			}
-			yield return new WaitForSeconds(stepTime); 
+			yield return new WaitForSeconds(stepTime); // wait stepTime seconds before recalculating and re-rendering all over again
 		}
 	}
 
@@ -148,24 +139,6 @@ public class GameMangerScript : MonoBehaviour
 			
 		if (isAlive(x, y, z)) // if true then we counted the block itself above
 			cnt--; // so uncount self
-
-
-		// Cardinal face neighbours
-		// if (isAlive(x+1,y,z))
-		// 	cnt++;
-		// if (isAlive(x-1,y,z))
-		// 	cnt++;
-
-		
-		// if (isAlive(x,y+1,z))
-		// 	cnt++;
-		// if (isAlive(x,y-1,z))
-		// 	cnt++;
-			
-		// if (isAlive(x,y,z+1))
-		// 	cnt++;
-		// if (isAlive(x,y,z-1))
-		// 	cnt++;
 
 		return cnt;
 	}
@@ -195,12 +168,12 @@ public class GameMangerScript : MonoBehaviour
 	}
 
 	void DrawMatrixBorder() {
-		// // Color lineCol = new Color(1, 1, 1);
-		// // DrawLine(worldCentre + Vector3 ((cubeLen*gridWidth)/2), Vector3 end, Color color);
-		// float xDist = (cubeLen*gridWidth)/2;
-		// float yDist = (cubeLen*gridHeight)/2;
-		// float zDist = (cubeLen*gridDepth)/2;
-		// Vector3 zero = new Vector3(0,0,0); // vector3.zero shorthand
+		// //Color lineCol = new Color(1, 1, 1);
+		// //DrawLine(worldCentre + Vector3 ((cubeLen*gridWidth)/2), worldCentre - Vector3 ((cubeLen*gridWidth)/2), Color lineCol);
+		// float xDist = (cubeLen*gridWidth);
+		// float yDist = (cubeLen*gridHeight);
+		// float zDist = (cubeLen*gridDepth);
+		// Vector3 zero = worldCentre;//new Vector3(0,0,0); // vector3.zero shorthand
 
 		// // DONE
 		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
