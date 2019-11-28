@@ -5,50 +5,44 @@ using UnityEngine.UI;
 
 public class GameMangerScript : MonoBehaviour
 {
-    public GameObject cubeBase;
-	public GameObject cube;
-	private bool[, , ,] state; // [x][y][z][LAYER] - layer: whether current render or next
+	private bool[,,,] state; // [x][y][z][LAYER] - layer: whether current render or next
 	private int gridWidth;
 	private int gridHeight;
 	private int gridDepth;
 	private float stepTime; // time between grid update
 	private int cubeLen;
-	private Vector3 worldCentre;
-	private GameObject[, ,] cubeArray;
+	private Vector3 gridAdjust; // used to offset grid so that the centre of the grid aligns with Vector3.zero
+	private GameObject[,,] cubeArray;
 
 	int starvationValue;
 	int overpopulationValue;
 	int generationLowerValue;
 	int generationUpperValue;
-	
+
 
 	// Start is called before the first frame update
-    void Start()
-    {
+	void Start()
+	{
 		Camera.main.transform.position = new Vector3(50f, 50f, 50f);
-        Camera.main.transform.LookAt(new Vector3(0,0,0));
+		Camera.main.transform.LookAt(new Vector3(0, 0, 0));
 
-		stepTime = 1f;
-
-		cubeLen = 2;
-		
-		SetupGame(5, 5, 5);
-		RandomiseState();
-
-		// draw lines to show the outside of our matrix
-		DrawMatrixBorder();
+		stepTime = 1f; // update once a second
+		cubeLen = 2; // cubes are 2 unity distance units in each dimension
 
 		StartCoroutine("GameStep");
-    }
+	}
 
-	private void SetupGame(int matrixW, int matrixH, int matrixD) {
+	// set-up the actual grid based on the user's specified dimensions
+	private void SetupGame(int matrixW, int matrixH, int matrixD)
+	{
 		gridWidth = matrixW;
 		gridHeight = matrixH;
 		gridDepth = matrixD;
 
-		worldCentre = new Vector3(-(gridWidth/2)*cubeLen, -(gridHeight/2)*cubeLen, -(gridDepth/2)*cubeLen);
+		gridAdjust = new Vector3(-(gridWidth / 2) * cubeLen, -(gridHeight / 2) * cubeLen, -(gridDepth / 2) * cubeLen);// offset grid so centre of the grid aligns with Vector3.zero
 		state = new bool[gridWidth, gridHeight, gridDepth, 2];
 
+		// if the cube array isn't empty/unitialised, clear it
 		if (cubeArray != null)
 		{
 			foreach (GameObject cube in cubeArray)
@@ -58,11 +52,16 @@ public class GameMangerScript : MonoBehaviour
 		cubeArray = new GameObject[gridWidth, gridHeight, gridDepth];
 	}
 
-	private void RandomiseState() {
-		for (int x=0; x<gridWidth; x++) {
-			for (int y=0; y<gridHeight; y++) {
-				for (int z=0; z<gridDepth; z++) {	
-					if (Random.Range(0,1f) <= 0.5)
+	// runs through £D state grid, set elements as either true or false at random
+	private void RandomiseState()
+	{
+		for (int x = 0; x < gridWidth; x++)
+		{
+			for (int y = 0; y < gridHeight; y++)
+			{
+				for (int z = 0; z < gridDepth; z++)
+				{
+					if (Random.Range(0, 1f) <= 0.5)
 						state[x, y, z, 0] = true;
 					else
 						state[x, y, z, 0] = false;
@@ -73,45 +72,54 @@ public class GameMangerScript : MonoBehaviour
 		}
 	}
 
-	private IEnumerator GameStep() {
-        while (true) {
+	private IEnumerator GameStep()
+	{
+		while (true)
+		{
 			// find out how many neighbours each cell has
-			for (int x=0; x<gridWidth; x++) {
-				for (int y=0; y<gridHeight; y++) {
-					for (int z=0; z<gridDepth; z++) {	
-						int cnt = countNeighbours(x,y,z);
+			for (int x = 0; x < gridWidth; x++)
+			{
+				for (int y = 0; y < gridHeight; y++)
+				{
+					for (int z = 0; z < gridDepth; z++)
+					{
+						int cnt = countNeighbours(x, y, z);
 
 						// apply life/death rules on NEXT LAYER
 						if (cnt < starvationValue || cnt > overpopulationValue) // if starvation/ overpopulation values met
-							state[x,y,z,1] = false; // kill the cell
+							state[x, y, z, 1] = false; // kill the cell
 						if (cnt > generationLowerValue && cnt < generationUpperValue) // if the range of values for spontaneous gen met
-							state[x,y,z,1] = true; // IT'S ALIIIVVVEEEE!!!!
+							state[x, y, z, 1] = true; // IT'S ALIIIVVVEEEE!!!!
 
-						if (state[x,y,z,1]) {
-							if (cubeArray[x,y,z] == null) {  // if there's not already a cube in place from last cycle
-								cubeArray[x,y,z] = GameObject.CreatePrimitive(PrimitiveType.Cube);;
-								cube = cubeArray[x,y,z];
-								cube.transform.localScale = new Vector3(cubeLen, cubeLen, cubeLen);
-								cube.transform.position = new Vector3(worldCentre.x+(x*cubeLen), worldCentre.y+(y*cubeLen), worldCentre.z+(z*cubeLen));
-								
+						if (state[x, y, z, 1])
+						{
+							if (cubeArray[x, y, z] == null)
+							{  // if there's not already a cube in place from last cycle
+								cubeArray[x, y, z] = GameObject.CreatePrimitive(PrimitiveType.Cube); ;
+								cubeArray[x, y, z].transform.localScale = new Vector3(cubeLen, cubeLen, cubeLen);
+								cubeArray[x, y, z].transform.position = new Vector3(gridAdjust.x + (x * cubeLen), gridAdjust.y + (y * cubeLen), gridAdjust.z + (z * cubeLen));
 
-								float hue = ((float)y/(float)gridHeight); // entire rainbow should be run through from bottom floor to top
-								//float val = (((float)x/(float)gridWidth)/2f + .5f); // smaller range for value, don't want a mass of hard-to-distinguish black cubes
-								cube.GetComponent<Renderer>().material.color = Color.HSVToRGB(hue, 1f, 1f);
+
+								float hue = ((float)y / (float)gridHeight); // entire rainbow should be run through from bottom floor to top
+								cubeArray[x, y, z].GetComponent<Renderer>().material.color = Color.HSVToRGB(hue, 1f, 1f);
 							}
 						}
-						else { // if it's a dead cell this cycle
-							if (cubeArray[x,y,z] != null) // if there's a cube here from last run
-								Object.Destroy(cubeArray[x,y,z]);
+						else
+						{ // if it's a dead cell this cycle
+							if (cubeArray[x, y, z] != null) // if there's a cube here from last run
+								Object.Destroy(cubeArray[x, y, z]);
 						}
 					}
 				}
 			}
 			// make current layer become next
-			for (int x=0; x<gridWidth; x++) {
-				for (int y=0; y<gridHeight; y++) {
-					for (int z=0; z<gridDepth; z++) {	
-						state[x,y,z,0] = state[x,y,z,1];
+			for (int x = 0; x < gridWidth; x++)
+			{
+				for (int y = 0; y < gridHeight; y++)
+				{
+					for (int z = 0; z < gridDepth; z++)
+					{
+						state[x, y, z, 0] = state[x, y, z, 1];
 
 					}
 				}
@@ -120,200 +128,134 @@ public class GameMangerScript : MonoBehaviour
 		}
 	}
 
-	private int countNeighbours(int x, int y, int z) {
-		// return number of neighbours
+	// return number of neighbours for given cell
+	private int countNeighbours(int x, int y, int z)
+	{
 		int cnt = 0;
 
-		int n = 0;
-
-		// find all 26 neigbours (and also self,see below)
-		for (int xx=-1; xx<2; xx++) {
-				for (int yy=-1; yy<2; yy++) {
-					for (int zz=-1; zz<2; zz++) {	
-						if (isAlive(x+xx, y+yy, z+zz))
-							cnt++;
-						n++;
-					}
+		// find all 26 neigbours (includes self,see below)
+		for (int xx = -1; xx < 2; xx++)
+		{
+			for (int yy = -1; yy < 2; yy++)
+			{
+				for (int zz = -1; zz < 2; zz++)
+				{
+					if (isAlive(x + xx, y + yy, z + zz))
+						cnt++;
 				}
+			}
 		}
-			
+
 		if (isAlive(x, y, z)) // if true then we counted the block itself above
 			cnt--; // so uncount self
 
 		return cnt;
 	}
 
-	private bool isAlive(int x, int y, int z) {
+	// returns if given cell is alive (accounts for edge wrapping)
+	private bool isAlive(int x, int y, int z)
+	{
 		// Wrap values if off grid
 		if (x < 0)
-			x = (gridWidth-1);
+			x = (gridWidth - 1);
 		if (x >= gridWidth)
 			x = 0;
 
 		if (y < 0)
-			y = (gridHeight-1);
+			y = (gridHeight - 1);
 		if (y >= gridHeight)
 			y = 0;
 
 		if (z < 0)
-			z = (gridDepth-1);
+			z = (gridDepth - 1);
 		if (z >= gridDepth)
 			z = 0;
-		
+
 		// if provided cell (wrapped) is alive, return true
-		if (state[x,y,z,0] == true)
+		if (state[x, y, z, 0] == true)
 			return true;
-		
+
 		return false;
 	}
 
-	void DrawMatrixBorder() {
-		// //Color lineCol = new Color(1, 1, 1);
-		// //DrawLine(worldCentre + Vector3 ((cubeLen*gridWidth)/2), worldCentre - Vector3 ((cubeLen*gridWidth)/2), Color lineCol);
-		// float xDist = (cubeLen*gridWidth);
-		// float yDist = (cubeLen*gridHeight);
-		// float zDist = (cubeLen*gridDepth);
-		// Vector3 zero = worldCentre;//new Vector3(0,0,0); // vector3.zero shorthand
-
-		// // DONE
-		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-		// DrawLine(new Vector3(zero.x - xDist, zero.y + yDist, zero.z - zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-		// DrawLine(new Vector3(zero.x - xDist, zero.y + yDist, zero.z - zDist), new Vector3(zero.x + xDist, zero.y + yDist, zero.z - zDist));
-		// DrawLine(new Vector3(zero.x + xDist, zero.y + yDist, zero.z - zDist), new Vector3(zero.x + xDist, zero.y - yDist, zero.z - zDist));
-
-		// // NOT DONE:
-		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-
-		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-		// DrawLine(new Vector3(zero.x - xDist, zero.y - yDist, zero.z + zDist), new Vector3(zero.x - xDist, zero.y + yDist, zero.z + zDist));
-	} 
-
-
-     void DrawLine(Vector3 start, Vector3 end)
+	// Update is called once per frame
+	void Update()
 	{
-		GameObject myLine = new GameObject();
-		myLine.transform.position = start;
-		myLine.AddComponent<LineRenderer>();
-		LineRenderer lr = myLine.GetComponent<LineRenderer>();
-		//lr.material = new Material(Shader.Find("Particles/Alpha Blended Premultiply"));
-		// lr.SetColors(color, color);
-		Color color = new Color(1f, 1f, 1f);
-		lr.startColor = color;
-		lr.endColor = color;
-		// lr.SetWidth(0.1f, 0.1f);
-		lr.startWidth = 1f;
-		lr.endWidth = 1f;
-		lr.SetPosition(0, start);
-		lr.SetPosition(1, end);
-		//GameObject.Destroy(myLine, duration);
-	}
+		// MOUSE CONTROLS		
+		if (Input.GetMouseButton(0))
+		{
 
-
-
-
-
-    // Update is called once per frame
-    void Update()
-    {
-        // resatrt simulation
-		if (Input.GetKeyDown(KeyCode.R)) {
-			StopCoroutine("GameStep");
-			RandomiseState();
-			StartCoroutine("GameStep");
+			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, 500f * Time.deltaTime * Input.GetAxis("Mouse X"));
+			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.right, -500f * Time.deltaTime * Input.GetAxis("Mouse Y"));
 		}
 
+		float scrollAmount = Input.GetAxis("Mouse ScrollWheel");
 
-		// CAMERA
-		Vector3 centre = new Vector3(0,0,0);
-		
+
+		if ((scrollAmount < 0 && Vector3.Distance(Vector3.zero, Camera.main.transform.position) > 25f) || scrollAmount > 0) // don't allow to zoom to far in, ooherwise can't zoom back out
+			Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, Vector3.zero, (1 / scrollAmount) * -70f * Time.deltaTime);
+
+
+		// KEYBOARD CONTROLS:
+		Vector3 centre = Vector3.zero;
+
 		// Zoom in and out
-        if (Input.GetKey("up") && Vector3.Distance(Vector3.zero, Camera.main.transform.position) > 2) // don't allow to zoom to far in, toherwise can't zoom back out
-        {
-            Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, 50f * Time.deltaTime);
-        }
-        if (Input.GetKey("down"))
-        {
-            Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, -50f * Time.deltaTime);
-        }
+		if (Input.GetKey("up") && Vector3.Distance(Vector3.zero, Camera.main.transform.position) > 25f) // don't allow to zoom to far in, ooherwise can't zoom back out
+		{
+			Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, 50f * Time.deltaTime);
+		}
+		if (Input.GetKey("down"))
+		{
+			Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, -50f * Time.deltaTime);
+		}
 
-        // Rotate camera around on x plane (left to right)
-        if (Input.GetKey(KeyCode.A))
-        {
-            Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, 50f * Time.deltaTime);
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, -50f * Time.deltaTime);
-        }
+		// Rotate camera around on x plane (left to right)
+		if (Input.GetKey(KeyCode.A))
+		{
+			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, 50f * Time.deltaTime);
+		}
+		if (Input.GetKey(KeyCode.D))
+		{
+			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, -50f * Time.deltaTime);
+		}
 
 		// Rotate camera around on y plane (top to bottom)
-        if (Input.GetKey(KeyCode.W))
-        {
-            Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.right, 1);
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.right, -1);
-        }
+		if (Input.GetKey(KeyCode.W))
+		{
+			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.right, 50f * Time.deltaTime);
+		}
+		if (Input.GetKey(KeyCode.S))
+		{
+			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.right, -50f * Time.deltaTime);
+		}
 
-		// INCREASE COMPLEXITY
-		if (Input.GetKeyDown(KeyCode.P))
-        {
-            SetupGame(gridWidth+=5, gridHeight+=5, gridDepth+=5);
-			Debug.Log("increase, s= " + gridWidth);
-			RandomiseState();
-        }
-		// DECREASE COMPLEXITY
-		if (Input.GetKeyDown(KeyCode.L))
-        {
-            SetupGame(gridWidth-=5, gridHeight-=5, gridDepth-=5);
-			Debug.Log("decrease, s= " + gridWidth);
-			RandomiseState();
-        }
+	}
 
-    }
+	public void StartGame(int x, int y, int z, int starve, int overpop, int genLower, int genUpper)
+	{
+		// if our conditions field aren't blank or invalid
+		if (starve > 0 && overpop > 0 && genLower > 0 && genUpper > 0)
+		{
+			starvationValue = starve;
+			overpopulationValue = overpop;
+			generationLowerValue = genLower;
+			generationUpperValue = genUpper;
 
-	public void restartGame(int x, int y, int z, int starve, int overpop, int genLower, int genUpper){
-		int vert, hor, zert;
-		//vert = hor = zert = 5;
+			// if none of our three dimension fields are blank
+			if (x > 0 && y > 0 && z > 0)
+			{
+				gridDepth = z;
+				gridHeight = y;
+				gridWidth = x;
 
-		vert = y;
-		hor = x;
-		zert = z;
-
-		starvationValue = starve;
-		overpopulationValue = overpop;
-		generationLowerValue = genLower;
-		generationUpperValue = genUpper;
-		
-		// if TryParse kicks up a fuss over any of the user's dimension inputs
-		/*if (!(int.TryParse(x, out vert) && int.TryParse(y, out hor) && int.TryParse(z, out zert)))
-			vert = -1; // atomatically fail the next if statement
-*/
-/*
-		int vert = int.Parse(verticalField.text);
-		int hor = int.Parse(horizontalField.text);
-		int zert = int.Parse(zertizontalField.text);*/
-		
-		// if none of our three dimension fields are blank
-		if(vert>0 && hor>0 && zert>0) {
-			gridDepth=zert;
-			gridHeight = vert;
-			gridWidth = hor;
-			
-			// set up and start
-			Debug.Log ("Dimensions valid!! " + hor + "x" + vert + "x" + zert);
-			SetupGame(gridWidth, gridHeight, gridDepth);
-			RandomiseState();
+				// set up and start
+				SetupGame(gridWidth, gridHeight, gridDepth);
+				RandomiseState();
+			}
+			else
+				Debug.Log("Dimension input invalid!");
 		}
 		else
-			Debug.Log ("Dimension input invalid!");
-
-		Debug.Log (	starvationValue + ", " + overpopulationValue +", " +  generationLowerValue +", " + 	generationUpperValue );
+			Debug.Log("Conditions input invalid!");
 	}
 }

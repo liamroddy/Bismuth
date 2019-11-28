@@ -141,9 +141,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cca03fa5f777f8b47b96ba8f3daa0c3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cubeBase: {fileID: 5954308687112944100, guid: bc972941b4fb33749ad20bbe37affbb3,
-    type: 3}
-  cube: {fileID: 100000, guid: f786fa35b90fbf643b93441d1450f51b, type: 3}
 --- !u!4 &506106
 Transform:
   m_ObjectHideFlags: 0
@@ -341,11 +338,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e669f52edac45348969e566de63c4e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 506104}
-  RestartButton: {fileID: 1502339360}
-  verticalField: {fileID: 1235299217}
-  horizontalField: {fileID: 651226780}
-  zertizontalField: {fileID: 1134289103}
+  GameManager: {fileID: 506104}
+  StartButton: {fileID: 1502339360}
+  VerticalField: {fileID: 1235299217}
+  HorizontalField: {fileID: 651226780}
+  DepthField: {fileID: 1134289103}
   StarvationField: {fileID: 797219339}
   OverpopulationField: {fileID: 365503118}
   GenerationLowerField: {fileID: 1835773745}
@@ -752,6 +749,7 @@ GameObject:
   - component: {fileID: 555860625}
   - component: {fileID: 555860624}
   - component: {fileID: 555860623}
+  - component: {fileID: 555860626}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -816,13 +814,25 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 555860622}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 626, z: -10}
+  m_LocalScale: {x: 25.000015, y: 25.000015, z: 25}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
+--- !u!114 &555860626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 555860622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e78a06e5e70eca54f8815934804739d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &631351764
 GameObject:
   m_ObjectHideFlags: 0
@@ -1058,7 +1068,7 @@ GameObject:
   - component: {fileID: 701312241}
   - component: {fileID: 701312240}
   m_Layer: 5
-  m_Name: Dimensions
+  m_Name: Dimensions Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2259,7 +2269,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
 --- !u!1 &1262941751
 GameObject:
@@ -2641,7 +2651,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 30, y: 30}
-  m_SizeDelta: {x: 200, y: 80}
+  m_SizeDelta: {x: 250, y: 80}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1717613080
 MonoBehaviour:
@@ -2676,9 +2686,9 @@ MonoBehaviour:
     m_LineSpacing: 1
   m_Text: 'Controls:
 
-    WASD: Rotate
+    WASD: Rotate: WASD/ Click and drag
 
-    Up/Down Arrow: Zoom'
+    Zoom: Up/Down Arrow/ Scrollwheel'
 --- !u!222 &1717613081
 CanvasRenderer:
   m_ObjectHideFlags: 0
