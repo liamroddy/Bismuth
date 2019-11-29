@@ -1,35 +1,34 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class GameMangerScript : MonoBehaviour
 {
 	private bool[,,,] state; // [x][y][z][LAYER] - layer: whether current render or next
+	private float stepTime; // time between grid update
+	private int cubeLen; // the length/breadth/depth of the rendered cubes
+	private Vector3 gridAdjust; // used to offset grid so that the centre of the grid aligns with Vector3.zero
+	private GameObject[,,] cubeArray; // a 3D array of to hold all our cube object
+
+	// the 3 user set dimensions of the grid:
 	private int gridWidth;
 	private int gridHeight;
 	private int gridDepth;
-	private float stepTime; // time between grid update
-	private int cubeLen;
-	private Vector3 gridAdjust; // used to offset grid so that the centre of the grid aligns with Vector3.zero
-	private GameObject[,,] cubeArray;
 
-	int starvationValue;
-	int overpopulationValue;
-	int generationLowerValue;
-	int generationUpperValue;
+	// the rules for our game simulation:
+	int starvationValue; // if number of neighbours is below this, the cell starves and dies
+	int overpopulationValue; // if num of neighbours above this, there's overpopulation and the cell dies
+	int generationLowerValue; // if neighbour count > than this AND -- 
+	int generationUpperValue; // -- < than this, we've an ideal environment and a dead cell can spontaneously come to life
 
 
 	// Start is called before the first frame update
 	void Start()
 	{
-		Camera.main.transform.position = new Vector3(50f, 50f, 50f);
-		Camera.main.transform.LookAt(new Vector3(0, 0, 0));
-
 		stepTime = 1f; // update once a second
 		cubeLen = 2; // cubes are 2 unity distance units in each dimension
 
-		StartCoroutine("GameStep");
+		StartCoroutine("GameStep"); // start the game step timer going, ticking once every stepTime
 	}
 
 	// set-up the actual grid based on the user's specified dimensions
@@ -52,7 +51,7 @@ public class GameMangerScript : MonoBehaviour
 		cubeArray = new GameObject[gridWidth, gridHeight, gridDepth];
 	}
 
-	// runs through £D state grid, set elements as either true or false at random
+	// runs through 3D state grid, set elements as either true or false at random
 	private void RandomiseState()
 	{
 		for (int x = 0; x < gridWidth; x++)
@@ -66,7 +65,7 @@ public class GameMangerScript : MonoBehaviour
 					else
 						state[x, y, z, 0] = false;
 
-					state[x, y, z, 1] = false;
+					state[x, y, z, 1] = false; // entire next state layer set to false right away (we don't know the future - yet)
 				}
 			}
 		}
@@ -178,59 +177,6 @@ public class GameMangerScript : MonoBehaviour
 		return false;
 	}
 
-	// Update is called once per frame
-	void Update()
-	{
-		// MOUSE CONTROLS		
-		if (Input.GetMouseButton(0))
-		{
-
-			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, 500f * Time.deltaTime * Input.GetAxis("Mouse X"));
-			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.right, -500f * Time.deltaTime * Input.GetAxis("Mouse Y"));
-		}
-
-		float scrollAmount = Input.GetAxis("Mouse ScrollWheel");
-
-
-		if ((scrollAmount < 0 && Vector3.Distance(Vector3.zero, Camera.main.transform.position) > 25f) || scrollAmount > 0) // don't allow to zoom to far in, ooherwise can't zoom back out
-			Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, Vector3.zero, (1 / scrollAmount) * -70f * Time.deltaTime);
-
-
-		// KEYBOARD CONTROLS:
-		Vector3 centre = Vector3.zero;
-
-		// Zoom in and out
-		if (Input.GetKey("up") && Vector3.Distance(Vector3.zero, Camera.main.transform.position) > 25f) // don't allow to zoom to far in, ooherwise can't zoom back out
-		{
-			Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, 50f * Time.deltaTime);
-		}
-		if (Input.GetKey("down"))
-		{
-			Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position, centre, -50f * Time.deltaTime);
-		}
-
-		// Rotate camera around on x plane (left to right)
-		if (Input.GetKey(KeyCode.A))
-		{
-			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, 50f * Time.deltaTime);
-		}
-		if (Input.GetKey(KeyCode.D))
-		{
-			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.up, -50f * Time.deltaTime);
-		}
-
-		// Rotate camera around on y plane (top to bottom)
-		if (Input.GetKey(KeyCode.W))
-		{
-			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.right, 50f * Time.deltaTime);
-		}
-		if (Input.GetKey(KeyCode.S))
-		{
-			Camera.main.transform.RotateAround(Vector3.zero, Camera.main.transform.right, -50f * Time.deltaTime);
-		}
-
-	}
-
 	public void StartGame(int x, int y, int z, int starve, int overpop, int genLower, int genUpper)
 	{
 		// if our conditions field aren't blank or invalid
@@ -257,5 +203,11 @@ public class GameMangerScript : MonoBehaviour
 		}
 		else
 			Debug.Log("Conditions input invalid!");
+	}
+
+	// Update is called once per frame
+	void Update()
+	{
+
 	}
 }
